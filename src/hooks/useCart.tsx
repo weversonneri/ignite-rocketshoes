@@ -1,7 +1,7 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
-import { toast } from 'react-toastify';
-import { api } from '../services/api';
-import { Product, Stock } from '../types';
+import { createContext, ReactNode, useContext, useState } from "react";
+import { toast } from "react-toastify";
+import { api } from "../services/api";
+import { Product, Stock } from "../types";
 
 interface CartProviderProps {
   children: ReactNode;
@@ -34,9 +34,19 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const addProduct = async (productId: number) => {
     try {
-      // TODO
+      const { data } = await api.get(`products/${productId}`);
+
+      const findProductInCart = [...cart].find(
+        (product) => product.id === data.id
+      );
+
+      if (!findProductInCart) {
+        const newCart = [...cart, data];
+        localStorage.setItem("@RocketShoes:cart", JSON.stringify(newCart));
+        setCart(newCart);
+      }
     } catch {
-      // TODO
+      toast.error("Quantidade solicitada fora de estoque");
     }
   };
 
