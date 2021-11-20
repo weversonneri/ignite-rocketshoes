@@ -1,46 +1,46 @@
-import { createContext, ReactNode, useContext, useState } from "react";
-import { toast } from "react-toastify";
-import { api } from "../services/api";
-import { Product, Stock } from "../types";
+import { createContext, ReactNode, useContext, useState } from 'react';
+import { toast } from 'react-toastify';
+import { api } from '../services/api';
+import { Product, Stock } from '../types';
 
 interface CartProviderProps {
-  children: ReactNode;
+	children: ReactNode;
 }
 
 interface UpdateProductAmount {
-  productId: number;
-  amount: number;
+	productId: number;
+	amount: number;
 }
 
 interface CartContextData {
-  cart: Product[];
-  addProduct: (productId: number) => Promise<void>;
-  removeProduct: (productId: number) => void;
-  updateProductAmount: ({ productId, amount }: UpdateProductAmount) => void;
+	cart: Product[];
+	addProduct: (productId: number) => Promise<void>;
+	removeProduct: (productId: number) => void;
+	updateProductAmount: ({ productId, amount }: UpdateProductAmount) => void;
 }
 
 const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
-  const [cart, setCart] = useState<Product[]>(() => {
-    // const storagedCart = Buscar dados do localStorage
+	const [cart, setCart] = useState<Product[]>(() => {
+		const storagedCart = localStorage.getItem('@RocketShoes:cart');
 
-    // if (storagedCart) {
-    //   return JSON.parse(storagedCart);
-    // }
+		if (storagedCart) {
+			return JSON.parse(storagedCart);
+		}
 
-    return [];
-  });
+		return [];
+	});
 
-  const addProduct = async (productId: number) => {
-    try {
-      const { data } = await api.get(`products/${productId}`);
+	const addProduct = async (productId: number) => {
+		try {
+			const { data } = await api.get(`products/${productId}`);
 
-      const findProductInCart = [...cart].find(
-        (product) => product.id === data.id
-      );
+			const findProductInCart = [...cart].find(
+				(product) => product.id === data.id
+			);
 
-      if (!findProductInCart) {
+			if (!findProductInCart) {
 				const newCart = [
 					...cart,
 					{
@@ -49,20 +49,20 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 					},
 				];
 				localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCart));
-        setCart(newCart);
+				setCart(newCart);
 				return;
-      }
+			}
 			updateProductAmount({
 				productId: findProductInCart.id,
 				amount: findProductInCart.amount + 1,
 			});
-    } catch {
+		} catch {
 			toast.error('Erro na adição do produto');
-    }
-  };
+		}
+	};
 
-  const removeProduct = (productId: number) => {
-    try {
+	const removeProduct = (productId: number) => {
+		try {
 			const findProduct = [...cart].find((product) => product.id === productId);
 
 			if (!findProduct) {
@@ -75,16 +75,16 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
 			setCart(removeProduct);
 			localStorage.setItem('@RocketShoes:cart', JSON.stringify(removeProduct));
-    } catch {
+		} catch {
 			toast.error('Erro na remoção do produto');
-    }
-  };
+		}
+	};
 
-  const updateProductAmount = async ({
-    productId,
-    amount,
-  }: UpdateProductAmount) => {
-    try {
+	const updateProductAmount = async ({
+		productId,
+		amount,
+	}: UpdateProductAmount) => {
+		try {
 			const copy = [...cart];
 			const findProduct = copy.findIndex((product) => product.id === productId);
 
@@ -101,22 +101,22 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 			copy[findProduct].amount = amount;
 			setCart(copy);
 			localStorage.setItem('@RocketShoes:cart', JSON.stringify(copy));
-    } catch {
+		} catch {
 			toast.error('Erro na alteração de quantidade do produto');
-    }
-  };
+		}
+	};
 
-  return (
-    <CartContext.Provider
-      value={{ cart, addProduct, removeProduct, updateProductAmount }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+	return (
+		<CartContext.Provider
+			value={{ cart, addProduct, removeProduct, updateProductAmount }}
+		>
+			{children}
+		</CartContext.Provider>
+	);
 }
 
 export function useCart(): CartContextData {
-  const context = useContext(CartContext);
+	const context = useContext(CartContext);
 
-  return context;
+	return context;
 }
